@@ -5,6 +5,11 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+ 
+
+permissions:
+  contents: read         # required for most actions
+  security-events: write # required for uploading SARIF results
 
 env:
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/devops-assignment
