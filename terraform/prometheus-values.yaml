@@ -1,0 +1,24 @@
+alertmanager:
+  enabled: false
+
+grafana:
+  enabled: true
+
+# Scrape backend metrics
+additionalScrapeConfigs:
+  - job_name: 'my-backend'
+    metrics_path: /metrics
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['my-backend.app-namespace.svc.cluster.local:3000']
+
+# Load alert rules file
+ruleFiles:
+  - /etc/prometheus/alert-rules.yaml
+
+# Mount our alert rules ConfigMap
+extraConfigmapMounts:
+  - name: alert-rules
+    configMap: prometheus-alert-rules
+    mountPath: /etc/prometheus
+    readOnly: true

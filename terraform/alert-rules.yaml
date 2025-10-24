@@ -1,0 +1,20 @@
+groups:
+  - name: backend-alerts
+    rules:
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[2m])) by (le)) > 2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Response Time (>2s)"
+          description: "95th percentile response time exceeded 2s for more than 1 minute."
+
+      - alert: BackendDown
+        expr: up{job="my-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend Service Down"
+          description: "Prometheus could not scrape backend metrics for over 1 minute."

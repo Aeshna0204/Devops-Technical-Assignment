@@ -1,3 +1,47 @@
+# -----------------------
+# Node.js
+# -----------------------
 node_modules/
 .env
+npm-debug.log*
+yarn-error.log*
 wait-for-postgres.sh
+
+# -----------------------
+# Terraform
+# -----------------------
+*.tfstate
+*.tfstate.backup
+.terraform/
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# -----------------------
+# Helm
+# -----------------------
+charts/
+*.tgz
+helm-chart/.DS_Store
+
+# -----------------------
+# Logs & OS files
+# -----------------------
+*.log
+.DS_Store
+*.swp
+
+# -----------------------
+# IDE / Editor
+# -----------------------
+.idea/
+.vscode/
+*.code-workspace
+
+# -----------------------
+# Optional: CI/CD local files
+# -----------------------
+coverage/
+*.seed

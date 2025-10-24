@@ -15,6 +15,56 @@ const pool = new Pool({
 const app = express();
 app.use(express.json());
 
+async function initializeDatabase() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50),
+        email VARCHAR(50) UNIQUE
+      );
+    `);
+    console.log("✅ Users table is ready");
+  } catch (err) {
+    console.error("❌ Error creating users table:", err);
+  }
+}
+initializeDatabase();
+
+
+// ====== PROMETHEUS METRICS SETUP ======
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics({ prefix: "node_app_" });
+
+const httpRequestDuration = new client.Histogram({
+  name: "http_request_duration_seconds",
+  help: "Duration of HTTP requests in seconds",
+  labelNames: ["method", "route", "status_code"],
+  buckets: [0.1, 0.3, 0.5, 0.7, 1, 2, 3, 5] // time buckets in seconds
+});
+
+// Middleware to measure response time
+app.use((req, res, next) => {
+  const end = httpRequestDuration.startTimer();
+  res.on("finish", () => {
+    end({ method: req.method, route: req.route ? req.route.path : req.path, status_code: res.statusCode });
+  });
+  next();
+});
+
+// Metrics endpoint
+app.get("/metrics", async (req, res) => {
+  try {
+    res.set("Content-Type", client.register.contentType);
+    res.end(await client.register.metrics());
+  } catch (err) {
+    res.status(500).end(err);
+  }
+});
+// =======================================
+
+
+
 
 // Health check endpoint
 app.get("/health", async (req, res) => {

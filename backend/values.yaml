@@ -1,0 +1,137 @@
+replicaCount: 1
+
+image:
+  repository: aeshna24/devops-assignment
+  pullPolicy: IfNotPresent
+  tag: latest
+
+env:
+  - name: POSTGRES_USER
+    value: user
+  - name: POSTGRES_PASSWORD
+    value: password
+  - name: POSTGRES_DB
+    value: testdb
+  - name: PGUSER
+    value: user
+  - name: PGPASSWORD
+    value: password
+  - name: PGDATABASE
+    value: testdb
+  - name: PGHOST
+    value: "postgresql"
+  - name: PGPORT
+    value: "5432"
+  - name: PORT
+    value: "3000"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: NodePort
+  port: 3000
+  targetPort: 3000
+  nodePort: 30000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+httpRoute:
+  enabled: false
+  parentRefs:
+    - name: gateway
+      namespace: default
+  hostnames:
+    - example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+
+livenessProbe:
+  tcpSocket:
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
+  successThreshold: 1
+
+readinessProbe:
+  tcpSocket:
+    port: 3000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
