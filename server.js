@@ -2,6 +2,7 @@ const express =require("express");
 const pkg =require("pg");
 const dotenv = require("dotenv");
 dotenv.config();
+const client = require('prom-client');
 
 const { Pool } = pkg;
 const pool = new Pool({

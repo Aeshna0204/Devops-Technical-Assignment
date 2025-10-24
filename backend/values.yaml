@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: aeshna24/devops-assignment
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: latest
 
 env:
