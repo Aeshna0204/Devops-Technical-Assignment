@@ -4,6 +4,11 @@ metadata:
   name: {{ include "backend.fullname" . }}
   labels:
     {{- include "backend.labels" . | nindent 4 }}
+    app: my-backend  # ADD THIS LINE - critical for ServiceMonitor matching
+  annotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: '3000'
+    prometheus.io/scrape: 'true' 
 spec:
   type: {{ .Values.service.type }}
   ports:

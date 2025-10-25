@@ -1,5 +1,7 @@
 replicaCount: 1
 
+fullnameOverride: "my-backend"  # Add this line at the top
+
 image:
   repository: aeshna24/devops-assignment
   pullPolicy: Always
@@ -62,6 +64,7 @@ service:
   port: 3000
   targetPort: 3000
   nodePort: 30000
+  name: http
 
 ingress:
   enabled: false

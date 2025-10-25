@@ -138,6 +138,42 @@ resource "helm_release" "prometheus" {
   ]
 }
 
+resource "kubernetes_manifest" "backend_servicemonitor" {
+  manifest = {
+    apiVersion = "monitoring.coreos.com/v1"
+    kind       = "ServiceMonitor"
+    metadata = {
+      name      = "my-backend-servicemonitor"
+      namespace = kubernetes_namespace.monitoring.metadata[0].name
+      labels = {
+        release = "prometheus"
+      }
+    }
+    spec = {
+      selector = {
+        matchLabels = {
+          "app.kubernetes.io/name"     = "backend"     # ✅ Changed to match Helm
+          "app.kubernetes.io/instance" = "my-backend"  # ✅ Changed to match Helm
+        }
+      }
+      namespaceSelector = {
+        matchNames = [kubernetes_namespace.app.metadata[0].name]
+      }
+      endpoints = [
+        {
+          port     = "http"
+          path     = "/metrics"
+          interval = "15s"
+        }
+      ]
+    }
+  }
+
+  depends_on = [helm_release.prometheus, helm_release.backend]
+}
+
+
+
 # Simple PostgreSQL Deployment
 resource "kubernetes_deployment" "postgresql" {
   metadata {
@@ -202,7 +238,7 @@ resource "kubernetes_deployment" "postgresql" {
 
           readiness_probe {
             exec {
-              command = ["pg_isready", "-U", "user"]
+              command = ["pg_isready", "-U", "user","-d","testdb"]
             }
             initial_delay_seconds = 5
             period_seconds        = 5
@@ -210,7 +246,7 @@ resource "kubernetes_deployment" "postgresql" {
 
           liveness_probe {
             exec {
-              command = ["pg_isready", "-U", "user"]
+              command = ["pg_isready", "-U", "user","-d","testdb"]
             }
             initial_delay_seconds = 15
             period_seconds        = 10

@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: my-backend-servicemonitor
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend        # ✅ Changed to match Helm labels
+      app.kubernetes.io/instance: my-backend # ✅ Changed to match Helm labels
+  namespaceSelector:
+    matchNames:
+      - app-namespace
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s

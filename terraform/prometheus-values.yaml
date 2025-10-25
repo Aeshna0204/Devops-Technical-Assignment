@@ -3,22 +3,65 @@ alertmanager:
 
 grafana:
   enabled: true
+  adminPassword: prom-operator  # Set a known password for Grafana
 
-# Scrape backend metrics
-additionalScrapeConfigs:
-  - job_name: 'my-backend'
-    metrics_path: /metrics
-    scrape_interval: 15s
-    static_configs:
-      - targets: ['my-backend.app-namespace.svc.cluster.local:3000']
+prometheus:
+  prometheusSpec:
+    # Enable service monitor discovery
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector:
+      matchLabels:
+        release: prometheus
+    serviceMonitorNamespaceSelector:
+      any: true  # Allow discovery from all namespaces
+    
+    # Retention and storage
+    retention: 10d
+    
+    # Add external labels for alerts
+    externalLabels:
+      cluster: devops-assignment
+    
+    # Rule selector
+    ruleSelectorNilUsesHelmValues: false
+    ruleSelector:
+      matchLabels:
+        release: prometheus
 
-# Load alert rules file
-ruleFiles:
-  - /etc/prometheus/alert-rules.yaml
-
-# Mount our alert rules ConfigMap
-extraConfigmapMounts:
-  - name: alert-rules
-    configMap: prometheus-alert-rules
-    mountPath: /etc/prometheus
-    readOnly: true
+# Alert rules - will be loaded via PrometheusRule CRD
+# The ConfigMap approach is deprecated
+additionalPrometheusRulesMap:
+  backend-alerts:
+    groups:
+      - name: backend-alerts
+        interval: 30s
+        rules:
+          - alert: HighResponseTime
+            expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="my-backend"}[2m])) by (le)) > 2
+            for: 1m
+            labels:
+              severity: warning
+              service: backend
+            annotations:
+              summary: "High Response Time (>2s)"
+              description: "95th percentile response time is {{ $value }}s, which exceeded 2s threshold."
+          
+          - alert: BackendDown
+            expr: up{job="my-backend"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: backend
+            annotations:
+              summary: "Backend Service Down"
+              description: "The backend service has been down for more than 1 minute."
+          
+          - alert: HighErrorRate
+            expr: sum(rate(http_request_duration_seconds_count{job="my-backend",status_code=~"5.."}[5m])) / sum(rate(http_request_duration_seconds_count{job="my-backend"}[5m])) > 0.05
+            for: 2m
+            labels:
+              severity: warning
+              service: backend
+            annotations:
+              summary: "High HTTP Error Rate"
+              description: "Error rate is {{ $value | humanizePercentage }}, which exceeds 5% threshold."
